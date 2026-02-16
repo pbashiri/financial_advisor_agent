@@ -43,9 +43,9 @@ def load_settings(env_path: Path | None = None, profile_path: Path | None = None
     load_dotenv(env_file, override=True)
 
     # Required env vars
-    telegram_token = os.getenv("8396234190:AAFVe1--w7ZbF05iIznmL3jfbjclUBX6qOc")
-    anthropic_key = os.getenv("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")
-    allowed_ids_raw = os.getenv("p11199966", "")
+    telegram_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+    allowed_ids_raw = os.getenv("ALLOWED_TELEGRAM_USER_IDS", "")
 
     if not telegram_token:
         raise ValueError("TELEGRAM_BOT_TOKEN is required in .env")

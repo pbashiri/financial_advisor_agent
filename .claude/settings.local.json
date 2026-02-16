@@ -13,7 +13,8 @@
       "WebFetch(domain:docs.python-telegram-bot.org)",
       "Bash(curl:*)",
       "Bash(sh)",
-      "Bash(export PATH=\"$HOME/.local/bin:$PATH\")"
+      "Bash(export PATH=\"$HOME/.local/bin:$PATH\")",
+      "Bash(git remote set-url:*)"
     ]
   }
 }
