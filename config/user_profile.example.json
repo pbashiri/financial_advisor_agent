@@ -1,0 +1,66 @@
+{
+  "name": "Your Name",
+  "risk_tolerance": "moderate",
+  "investment_horizon": "10+ years",
+  "goals": [
+    "Long-term wealth building",
+    "Retirement savings",
+    "Generate passive income"
+  ],
+  "holdings": [
+    {
+      "symbol": "AAPL",
+      "shares": 50,
+      "cost_basis": 150.00,
+      "notes": "Core tech holding"
+    },
+    {
+      "symbol": "VOO",
+      "shares": 100,
+      "cost_basis": 380.00,
+      "notes": "S&P 500 index fund"
+    },
+    {
+      "symbol": "MSFT",
+      "shares": 30,
+      "cost_basis": 280.00,
+      "notes": "Tech diversification"
+    },
+    {
+      "symbol": "VTI",
+      "shares": 75,
+      "cost_basis": 200.00,
+      "notes": "Total market index"
+    }
+  ],
+  "watchlist": [
+    "GOOGL",
+    "AMZN",
+    "NVDA",
+    "BRK-B",
+    "SCHD"
+  ],
+  "exclusions": [
+    "No tobacco or gambling companies",
+    "No cryptocurrency speculation"
+  ],
+  "custom_rules": [
+    "I prefer index funds over individual stocks",
+    "I want to keep at least 6 months emergency fund before investing",
+    "Tax-loss harvesting is important to me"
+  ],
+  "accounts": [
+    {
+      "type": "Brokerage",
+      "provider": "Fidelity"
+    },
+    {
+      "type": "Roth IRA",
+      "provider": "Fidelity"
+    },
+    {
+      "type": "401k",
+      "provider": "Employer plan"
+    }
+  ]
+}
