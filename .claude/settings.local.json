@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip3:*)",
+      "Bash(uv:*)",
+      "Bash(poetry --version:*)",
+      "Bash(brew list:*)",
+      "Bash(pyenv versions:*)",
+      "Bash(python3.12:*)",
+      "Bash(python3.11:*)",
+      "Bash(python3.13:*)",
+      "WebSearch",
+      "WebFetch(domain:docs.python-telegram-bot.org)",
+      "Bash(curl:*)",
+      "Bash(sh)",
+      "Bash(export PATH=\"$HOME/.local/bin:$PATH\")",
+      "Bash(git remote set-url:*)",
+      "Bash(/Users/Pedram/.local/bin/uv pip list:*)",
+      "Bash(/Users/Pedram/.local/bin/uv run python:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
