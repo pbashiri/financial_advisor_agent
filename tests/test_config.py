@@ -46,6 +46,8 @@ def test_load_settings_basic(tmp_env: Path, tmp_profile: Path):
     assert settings.briefing_minute == 30
     assert settings.claude_model == "claude-haiku-4-5-20251001"
     assert settings.log_level == "DEBUG"
+    assert settings.major_indices["^GSPC"] == "S&P 500"
+    assert "^VIX" in settings.major_indices
 
 
 def test_load_settings_with_profile(tmp_env: Path, tmp_profile: Path):
