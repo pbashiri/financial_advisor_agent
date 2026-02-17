@@ -43,6 +43,9 @@ class Settings:
     # Market indices for briefing (symbol -> display name)
     major_indices: dict[str, str] = field(default_factory=lambda: dict(DEFAULT_MAJOR_INDICES))
 
+    # API backend URL (for bot → FastAPI communication)
+    api_base_url: str = "http://localhost:8000"
+
     # Paths
     db_path: Path = PROJECT_ROOT / "data" / "conversations.db"
 
@@ -95,6 +98,8 @@ def load_settings(env_path: Path | None = None, profile_path: Path | None = None
     if isinstance(user_profile.get("major_indices"), dict):
         major_indices = {str(k): str(v) for k, v in user_profile["major_indices"].items()}
 
+    api_base_url = os.getenv("API_BASE_URL", "http://localhost:8000")
+
     return Settings(
         telegram_bot_token=telegram_token,
         anthropic_api_key=anthropic_key,
@@ -105,5 +110,6 @@ def load_settings(env_path: Path | None = None, profile_path: Path | None = None
         log_level=log_level,
         user_profile=user_profile,
         major_indices=major_indices,
+        api_base_url=api_base_url,
         db_path=db_path,
     )
