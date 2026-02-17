@@ -19,6 +19,7 @@ class PortfolioStorage:
         """Create portfolio tables if they don't exist."""
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
         self._db = await aiosqlite.connect(self._db_path)
+        self._db.row_factory = aiosqlite.Row
         await self._db.execute("""
             CREATE TABLE IF NOT EXISTS holdings (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -80,7 +81,6 @@ class PortfolioStorage:
     async def get_holdings(self) -> list[Holding]:
         """Return all holdings ordered by symbol."""
         assert self._db is not None, "Call initialize() first"
-        self._db.row_factory = aiosqlite.Row
         cursor = await self._db.execute(
             "SELECT symbol, shares, cost_basis, account_type, notes, added_at, updated_at "
             "FROM holdings ORDER BY symbol"
@@ -102,17 +102,20 @@ class PortfolioStorage:
                 notes = excluded.notes,
                 updated_at = CURRENT_TIMESTAMP
             """,
-            (holding.symbol, holding.shares, holding.cost_basis, holding.account_type,
-             holding.notes),
+            (
+                holding.symbol,
+                holding.shares,
+                holding.cost_basis,
+                holding.account_type,
+                holding.notes,
+            ),
         )
         await self._db.commit()
 
     async def delete_holding(self, symbol: str) -> bool:
         """Delete a holding by symbol. Returns True if deleted."""
         assert self._db is not None, "Call initialize() first"
-        cursor = await self._db.execute(
-            "DELETE FROM holdings WHERE symbol = ?", (symbol.upper(),)
-        )
+        cursor = await self._db.execute("DELETE FROM holdings WHERE symbol = ?", (symbol.upper(),))
         await self._db.commit()
         return cursor.rowcount > 0
 
@@ -131,7 +134,6 @@ class PortfolioStorage:
     async def get_transactions(self, symbol: str | None = None) -> list[Transaction]:
         """Return transactions, optionally filtered by symbol."""
         assert self._db is not None, "Call initialize() first"
-        self._db.row_factory = aiosqlite.Row
         if symbol:
             cursor = await self._db.execute(
                 "SELECT symbol, action, shares, price, fees, transacted_at, notes "

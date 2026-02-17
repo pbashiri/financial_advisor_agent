@@ -81,6 +81,7 @@ async def async_main() -> None:
 
         # Keep running until interrupted
         import asyncio
+
         stop_event = asyncio.Event()
         try:
             await stop_event.wait()

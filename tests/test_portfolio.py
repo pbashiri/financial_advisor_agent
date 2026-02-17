@@ -8,7 +8,6 @@ from financial_advisor.portfolio.csv_import import parse_holdings_csv
 from financial_advisor.portfolio.models import Holding
 from financial_advisor.portfolio.storage import PortfolioStorage
 
-
 # --- Storage tests ---
 
 
@@ -78,9 +77,9 @@ async def test_seed_from_profile(storage: PortfolioStorage):
 
 async def test_seed_skips_if_holdings_exist(storage: PortfolioStorage):
     await storage.upsert_holding(Holding(symbol="MSFT", shares=5.0, cost_basis=300.0))
-    inserted = await storage.seed_from_profile([
-        {"symbol": "AAPL", "shares": 10, "cost_basis": 150.0}
-    ])
+    inserted = await storage.seed_from_profile(
+        [{"symbol": "AAPL", "shares": 10, "cost_basis": 150.0}]
+    )
     assert inserted == 0  # table not empty, seeding skipped
 
 
@@ -156,10 +155,10 @@ def test_csv_parse_empty_content():
 def test_csv_parse_mixed_valid_invalid():
     csv = (
         "symbol,shares,cost_basis\n"
-        "AAPL,50,150.00\n"          # valid
-        ",10,100.00\n"              # invalid: empty symbol
-        "VOO,abc,380.00\n"          # invalid: bad shares
-        "MSFT,30,280.00\n"          # valid
+        "AAPL,50,150.00\n"  # valid
+        ",10,100.00\n"  # invalid: empty symbol
+        "VOO,abc,380.00\n"  # invalid: bad shares
+        "MSFT,30,280.00\n"  # valid
     )
     result = parse_holdings_csv(csv)
     assert len(result.holdings) == 2

@@ -106,8 +106,6 @@ async def generate_briefing(settings: Settings, agent: FinancialAdvisorAgent) ->
     summary = await agent.summarize(raw_data)
     sections.append(f"\n*Market Summary*\n{summary}")
 
-    sections.append(
-        "\n_Data from Yahoo Finance. This is not financial advice._"
-    )
+    sections.append("\n_Data from Yahoo Finance. This is not financial advice._")
 
     return "\n".join(sections)

@@ -1,7 +1,5 @@
 """Tests for portfolio analytics calculations."""
 
-from datetime import datetime, timezone
-
 import pytest
 
 from financial_advisor.market_data import QuoteSnapshot
@@ -116,12 +114,24 @@ def test_calculate_summary_empty_holdings():
 def test_get_allocation_sorted_by_pct():
     holdings = [
         HoldingWithValue(
-            symbol="AAPL", shares=10, cost_basis=100, account_type="brokerage",
-            current_value=3000.0, total_cost=1000.0, gain_loss=2000.0, gain_loss_pct=200.0,
+            symbol="AAPL",
+            shares=10,
+            cost_basis=100,
+            account_type="brokerage",
+            current_value=3000.0,
+            total_cost=1000.0,
+            gain_loss=2000.0,
+            gain_loss_pct=200.0,
         ),
         HoldingWithValue(
-            symbol="VOO", shares=5, cost_basis=400, account_type="brokerage",
-            current_value=1000.0, total_cost=2000.0, gain_loss=-1000.0, gain_loss_pct=-50.0,
+            symbol="VOO",
+            shares=5,
+            cost_basis=400,
+            account_type="brokerage",
+            current_value=1000.0,
+            total_cost=2000.0,
+            gain_loss=-1000.0,
+            gain_loss_pct=-50.0,
         ),
     ]
     quotes = {
@@ -142,12 +152,24 @@ def test_get_allocation_sorted_by_pct():
 def test_get_allocation_skips_zero_value():
     holdings = [
         HoldingWithValue(
-            symbol="AAPL", shares=10, cost_basis=100, account_type="brokerage",
-            current_value=1000.0, total_cost=1000.0, gain_loss=0.0, gain_loss_pct=0.0,
+            symbol="AAPL",
+            shares=10,
+            cost_basis=100,
+            account_type="brokerage",
+            current_value=1000.0,
+            total_cost=1000.0,
+            gain_loss=0.0,
+            gain_loss_pct=0.0,
         ),
         HoldingWithValue(
-            symbol="BAD", shares=5, cost_basis=50, account_type="brokerage",
-            current_value=None, total_cost=250.0, gain_loss=None, gain_loss_pct=None,
+            symbol="BAD",
+            shares=5,
+            cost_basis=50,
+            account_type="brokerage",
+            current_value=None,
+            total_cost=250.0,
+            gain_loss=None,
+            gain_loss_pct=None,
         ),
     ]
     quotes = {"AAPL": _make_quote("AAPL", 100.0), "BAD": _make_unavailable_quote("BAD")}

@@ -68,10 +68,7 @@ def test_load_settings_missing_token(tmp_path: Path, monkeypatch: pytest.MonkeyP
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.delenv("ALLOWED_TELEGRAM_USER_IDS", raising=False)
     env_file = tmp_path / ".env"
-    env_file.write_text(
-        "ANTHROPIC_API_KEY=sk-ant-test\n"
-        "ALLOWED_TELEGRAM_USER_IDS=111\n"
-    )
+    env_file.write_text("ANTHROPIC_API_KEY=sk-ant-test\nALLOWED_TELEGRAM_USER_IDS=111\n")
     with pytest.raises(ValueError, match="TELEGRAM_BOT_TOKEN"):
         load_settings(env_path=env_file, profile_path=tmp_path / "nope.json")
 
@@ -81,10 +78,7 @@ def test_load_settings_missing_anthropic_key(tmp_path: Path, monkeypatch: pytest
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.delenv("ALLOWED_TELEGRAM_USER_IDS", raising=False)
     env_file = tmp_path / ".env"
-    env_file.write_text(
-        "TELEGRAM_BOT_TOKEN=test-token\n"
-        "ALLOWED_TELEGRAM_USER_IDS=111\n"
-    )
+    env_file.write_text("TELEGRAM_BOT_TOKEN=test-token\nALLOWED_TELEGRAM_USER_IDS=111\n")
     with pytest.raises(ValueError, match="ANTHROPIC_API_KEY"):
         load_settings(env_path=env_file, profile_path=tmp_path / "nope.json")
 
@@ -94,10 +88,7 @@ def test_load_settings_missing_user_ids(tmp_path: Path, monkeypatch: pytest.Monk
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.delenv("ALLOWED_TELEGRAM_USER_IDS", raising=False)
     env_file = tmp_path / ".env"
-    env_file.write_text(
-        "TELEGRAM_BOT_TOKEN=test-token\n"
-        "ANTHROPIC_API_KEY=sk-ant-test\n"
-    )
+    env_file.write_text("TELEGRAM_BOT_TOKEN=test-token\nANTHROPIC_API_KEY=sk-ant-test\n")
     with pytest.raises(ValueError, match="ALLOWED_TELEGRAM_USER_IDS"):
         load_settings(env_path=env_file, profile_path=tmp_path / "nope.json")
 

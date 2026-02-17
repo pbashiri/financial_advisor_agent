@@ -11,6 +11,8 @@ from ...portfolio.storage import PortfolioStorage
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+MAX_CSV_SIZE_BYTES = 1_000_000  # 1 MB
+
 
 def _get_storage(request: Request) -> PortfolioStorage:
     return request.app.state.storage
@@ -55,6 +57,8 @@ async def import_csv(file: UploadFile, request: Request):
     storage = _get_storage(request)
 
     content = await file.read()
+    if len(content) > MAX_CSV_SIZE_BYTES:
+        raise HTTPException(status_code=413, detail="CSV file is too large (max 1MB)")
     try:
         text = content.decode("utf-8")
     except UnicodeDecodeError:
@@ -82,6 +86,8 @@ async def import_csv_text(request: Request):
     """Import holdings from CSV text in the request body (for bot usage)."""
     storage = _get_storage(request)
     body = await request.body()
+    if len(body) > MAX_CSV_SIZE_BYTES:
+        raise HTTPException(status_code=413, detail="CSV body is too large (max 1MB)")
     try:
         text = body.decode("utf-8")
     except UnicodeDecodeError:

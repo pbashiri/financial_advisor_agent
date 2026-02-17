@@ -274,6 +274,11 @@ Edit [src/financial_advisor/memory.py](src/financial_advisor/memory.py):
 - **Never log API keys** in plaintext
 - **Never commit** .env to version control
 
+### API Backend (FastAPI)
+- The FastAPI backend is designed for **local, single-user use only** (Docker Compose or localhost).
+- **Do not expose** port 8000 or the API service directly to the public internet.
+- If you run this on a remote machine, keep the API **behind a firewall/VPN** and restrict access to your own network.
+
 ### User Authorization
 - Bot restricts access to single Telegram user ID (97566988)
 - Unauthorized users receive no response

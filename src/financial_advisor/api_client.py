@@ -11,8 +11,8 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-_CONNECT_TIMEOUT = 2.0   # seconds — fail fast if API is down
-_READ_TIMEOUT = 30.0     # seconds — allow time for yfinance calls
+_CONNECT_TIMEOUT = 2.0  # seconds — fail fast if API is down
+_READ_TIMEOUT = 30.0  # seconds — allow time for yfinance calls
 
 
 class ApiClient:
