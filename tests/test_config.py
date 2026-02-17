@@ -106,3 +106,25 @@ def test_settings_is_frozen(tmp_env: Path, tmp_profile: Path):
     settings = load_settings(env_path=tmp_env, profile_path=tmp_profile)
     with pytest.raises(AttributeError):
         settings.telegram_bot_token = "new-token"
+
+
+def test_load_settings_optional_market_insight_keys(tmp_env: Path, tmp_profile: Path):
+    """Optional Alpha Vantage and Finnhub keys default to None when not in .env."""
+    settings = load_settings(env_path=tmp_env, profile_path=tmp_profile)
+    assert settings.alpha_vantage_api_key is None
+    assert settings.finnhub_api_key is None
+
+
+def test_load_settings_with_market_insight_keys(tmp_path: Path, tmp_profile: Path):
+    """When set in .env, optional market insight API keys are loaded."""
+    env_file = tmp_path / ".env"
+    env_file.write_text(
+        "TELEGRAM_BOT_TOKEN=test-token\n"
+        "ANTHROPIC_API_KEY=sk-ant-test\n"
+        "ALLOWED_TELEGRAM_USER_IDS=111\n"
+        "ALPHA_VANTAGE_API_KEY=av-key-123\n"
+        "FINNHUB_API_KEY=fh-key-456\n"
+    )
+    settings = load_settings(env_path=env_file, profile_path=tmp_profile)
+    assert settings.alpha_vantage_api_key == "av-key-123"
+    assert settings.finnhub_api_key == "fh-key-456"

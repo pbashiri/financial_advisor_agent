@@ -115,9 +115,10 @@ src/financial_advisor/
 ├── bot.py          # Telegram handlers, commands, scheduled briefing
 ├── agent.py        # Claude API wrapper with conversation memory
 ├── memory.py       # Async SQLite for conversation history
-├── briefing.py     # Daily market briefing generation
-├── market_data.py  # yfinance wrapper for stock quotes
-└── prompts.py      # System prompts and financial disclaimers
+├── briefing.py       # Daily market briefing generation
+├── market_data.py    # yfinance wrapper for stock quotes
+├── market_insight.py # Alpha Vantage + Finnhub for market news/insight (optional)
+└── prompts.py       # System prompts and financial disclaimers
 
 tests/
 ├── test_config.py       # Configuration loading and validation
@@ -135,6 +136,8 @@ Contains production secrets:
 - `BRIEFING_HOUR`, `BRIEFING_MINUTE` - Daily briefing schedule (Pacific time)
 - `CLAUDE_MODEL` - AI model to use (default: claude-haiku-4-5-20251001)
 - `LOG_LEVEL` - Logging verbosity (default: INFO)
+- `ALPHA_VANTAGE_API_KEY` - (Optional) Free market news/sentiment; also has [MCP server](https://mcp.alphavantage.co/)
+- `FINNHUB_API_KEY` - (Optional) Free market news for briefing
 
 **If .env is missing or invalid, bot will crash on startup.**
 
@@ -217,6 +220,8 @@ Edit [src/financial_advisor/market_data.py](src/financial_advisor/market_data.py
 - Currently uses yfinance (free, no API key required)
 - For alternatives, consider: Alpha Vantage, Polygon.io, IEX Cloud
 - **Remember:** Most real-time market data APIs require paid subscriptions
+
+Market insight (news/sentiment) for the daily briefing is in [market_insight.py](src/financial_advisor/market_insight.py): optional Alpha Vantage (free 25/day, has MCP) and Finnhub (free tier). Set `ALPHA_VANTAGE_API_KEY` and/or `FINNHUB_API_KEY` in `.env` to enable.
 
 ### Adjusting Conversation Memory
 

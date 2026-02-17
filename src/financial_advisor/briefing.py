@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from .agent import FinancialAdvisorAgent
 from .config import Settings
 from .market_data import format_quote, get_index_quotes, get_multiple_quotes
+from .market_insight import fetch_market_insight
 
 logger = logging.getLogger(__name__)
 
@@ -101,13 +102,27 @@ async def generate_briefing(settings: Settings, agent: FinancialAdvisorAgent) ->
             arrow = "+" if (q.change_percent or 0) >= 0 else ""
             sections.append(f"  {q.name} ({q.symbol}): {arrow}{q.change_percent:.2f}%")
 
-    # Section 5: AI Market Summary
+    # Section 5: Market insight (Alpha Vantage + Finnhub when API keys are set)
+    if settings.alpha_vantage_api_key or settings.finnhub_api_key:
+        insight = await fetch_market_insight(
+            alpha_vantage_api_key=settings.alpha_vantage_api_key,
+            finnhub_api_key=settings.finnhub_api_key,
+        )
+        if insight.has_any():
+            sections.append("\n*Market Insight*")
+            sections.append(insight.to_briefing_text())
+
+    # Section 6: AI Market Summary
     raw_data = "\n".join(sections)
     summary = await agent.summarize(raw_data)
     sections.append(f"\n*Market Summary*\n{summary}")
 
-    sections.append(
-        "\n_Data from Yahoo Finance. This is not financial advice._"
-    )
+    # Footer: list data sources used
+    data_sources = ["Yahoo Finance"]
+    if settings.alpha_vantage_api_key:
+        data_sources.append("Alpha Vantage")
+    if settings.finnhub_api_key:
+        data_sources.append("Finnhub")
+    sections.append(f"\n_Data from {', '.join(data_sources)}. This is not financial advice._")
 
     return "\n".join(sections)

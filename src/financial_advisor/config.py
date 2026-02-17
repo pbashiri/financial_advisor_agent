@@ -46,6 +46,10 @@ class Settings:
     # API backend URL (for bot → FastAPI communication)
     api_base_url: str = "http://localhost:8000"
 
+    # Optional: market insight APIs (free tiers; add keys to enable briefing extras)
+    alpha_vantage_api_key: str | None = None
+    finnhub_api_key: str | None = None
+
     # Paths
     db_path: Path = PROJECT_ROOT / "data" / "conversations.db"
 
@@ -76,6 +80,8 @@ def load_settings(env_path: Path | None = None, profile_path: Path | None = None
     briefing_minute = int(os.getenv("BRIEFING_MINUTE", "0"))
     claude_model = os.getenv("CLAUDE_MODEL", "claude-haiku-4-5-20251001")
     log_level = os.getenv("LOG_LEVEL", "INFO")
+    alpha_vantage_api_key = os.getenv("ALPHA_VANTAGE_API_KEY") or None
+    finnhub_api_key = os.getenv("FINNHUB_API_KEY") or None
 
     # User profile (optional but recommended)
     profile_file = profile_path or PROJECT_ROOT / "config" / "user_profile.json"
@@ -111,5 +117,7 @@ def load_settings(env_path: Path | None = None, profile_path: Path | None = None
         user_profile=user_profile,
         major_indices=major_indices,
         api_base_url=api_base_url,
+        alpha_vantage_api_key=alpha_vantage_api_key,
+        finnhub_api_key=finnhub_api_key,
         db_path=db_path,
     )
