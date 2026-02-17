@@ -8,13 +8,6 @@ import yfinance as yf
 
 logger = logging.getLogger(__name__)
 
-MAJOR_INDICES = {
-    "^GSPC": "S&P 500",
-    "^IXIC": "NASDAQ",
-    "^DJI": "Dow Jones",
-    "^VIX": "VIX",
-}
-
 
 @dataclass
 class QuoteSnapshot:
@@ -86,9 +79,9 @@ async def get_multiple_quotes(symbols: list[str]) -> list[QuoteSnapshot]:
     return await asyncio.gather(*tasks)
 
 
-async def get_index_quotes() -> list[QuoteSnapshot]:
-    """Fetch major market index quotes."""
-    return await get_multiple_quotes(list(MAJOR_INDICES.keys()))
+async def get_index_quotes(major_indices: dict[str, str]) -> list[QuoteSnapshot]:
+    """Fetch major market index quotes. Symbols taken from major_indices (e.g. from settings)."""
+    return await get_multiple_quotes(list(major_indices.keys()))
 
 
 def format_quote(q: QuoteSnapshot) -> str:

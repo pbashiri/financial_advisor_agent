@@ -77,11 +77,11 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         return
 
     await update.message.reply_text(
-        "Welcome to your *Financial Advisor Bot*! \n\n"
+        "Welcome to your *Personal Financial Advisor Agent*! \n\n"
         "I can help you with:\n"
         "- Investment analysis and portfolio questions\n"
         "- Market insights and stock research\n"
-        "- Financial planning guidance\n\n"
+        "- Investment recommendations\n\n"
         "Commands:\n"
         "/help — Show available commands\n"
         "/briefing — Get today's market briefing\n"

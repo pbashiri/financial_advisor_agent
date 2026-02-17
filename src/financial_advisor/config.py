@@ -12,6 +12,13 @@ logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
+DEFAULT_MAJOR_INDICES: dict[str, str] = {
+    "^GSPC": "S&P 500",
+    "^IXIC": "NASDAQ",
+    "^DJI": "Dow Jones",
+    "^VIX": "VIX",
+}
+
 
 @dataclass(frozen=True)
 class Settings:
@@ -32,6 +39,9 @@ class Settings:
 
     # User financial profile (from user_profile.json)
     user_profile: dict = field(default_factory=dict)
+
+    # Market indices for briefing (symbol -> display name)
+    major_indices: dict[str, str] = field(default_factory=lambda: dict(DEFAULT_MAJOR_INDICES))
 
     # Paths
     db_path: Path = PROJECT_ROOT / "data" / "conversations.db"
@@ -80,6 +90,11 @@ def load_settings(env_path: Path | None = None, profile_path: Path | None = None
     db_path = PROJECT_ROOT / "data" / "conversations.db"
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # Major indices: allow override from user_profile, else default
+    major_indices = dict(DEFAULT_MAJOR_INDICES)
+    if isinstance(user_profile.get("major_indices"), dict):
+        major_indices = {str(k): str(v) for k, v in user_profile["major_indices"].items()}
+
     return Settings(
         telegram_bot_token=telegram_token,
         anthropic_api_key=anthropic_key,
@@ -89,5 +104,6 @@ def load_settings(env_path: Path | None = None, profile_path: Path | None = None
         claude_model=claude_model,
         log_level=log_level,
         user_profile=user_profile,
+        major_indices=major_indices,
         db_path=db_path,
     )

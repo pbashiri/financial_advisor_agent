@@ -1,10 +1,7 @@
 """Tests for market data module."""
 
-from financial_advisor.market_data import (
-    MAJOR_INDICES,
-    QuoteSnapshot,
-    format_quote,
-)
+from financial_advisor.config import DEFAULT_MAJOR_INDICES
+from financial_advisor.market_data import QuoteSnapshot, format_quote
 
 # We don't test actual yfinance API calls (network-dependent).
 # Instead we test the formatting and data structures.
@@ -104,7 +101,8 @@ def test_format_quote_unavailable():
 
 
 def test_major_indices_defined():
-    assert "^GSPC" in MAJOR_INDICES
-    assert "^IXIC" in MAJOR_INDICES
-    assert "^DJI" in MAJOR_INDICES
-    assert "^VIX" in MAJOR_INDICES
+    """Default major indices (from config/settings) include expected symbols."""
+    assert "^GSPC" in DEFAULT_MAJOR_INDICES
+    assert "^IXIC" in DEFAULT_MAJOR_INDICES
+    assert "^DJI" in DEFAULT_MAJOR_INDICES
+    assert "^VIX" in DEFAULT_MAJOR_INDICES

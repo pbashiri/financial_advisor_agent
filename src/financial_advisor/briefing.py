@@ -18,7 +18,7 @@ async def generate_briefing(settings: Settings, agent: FinancialAdvisorAgent) ->
     sections: list[str] = [f"*Daily Market Briefing — {now}*\n"]
 
     # Section 1: Major Indices
-    indices = await get_index_quotes()
+    indices = await get_index_quotes(settings.major_indices)
     sections.append("*Major Indices*")
     for q in indices:
         sections.append(format_quote(q))
