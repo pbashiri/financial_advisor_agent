@@ -60,6 +60,7 @@ class Transaction(BaseModel):
 
 class HoldingWithValue(BaseModel):
     """A holding enriched with live market data."""
+
     symbol: str
     shares: float
     cost_basis: float

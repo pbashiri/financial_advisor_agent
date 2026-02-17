@@ -27,19 +27,21 @@ def calculate_summary(
             else None
         )
 
-        enriched.append(HoldingWithValue(
-            symbol=h.symbol,
-            shares=h.shares,
-            cost_basis=h.cost_basis,
-            account_type=h.account_type,
-            notes=h.notes,
-            current_price=current_price,
-            current_value=current_value,
-            total_cost=total_hold_cost,
-            gain_loss=gain_loss,
-            gain_loss_pct=gain_loss_pct,
-            day_change_pct=q.change_percent if q else None,
-        ))
+        enriched.append(
+            HoldingWithValue(
+                symbol=h.symbol,
+                shares=h.shares,
+                cost_basis=h.cost_basis,
+                account_type=h.account_type,
+                notes=h.notes,
+                current_price=current_price,
+                current_value=current_value,
+                total_cost=total_hold_cost,
+                gain_loss=gain_loss,
+                gain_loss_pct=gain_loss_pct,
+                day_change_pct=q.change_percent if q else None,
+            )
+        )
 
         if current_value is not None:
             total_value += current_value
@@ -74,13 +76,15 @@ def get_allocation(
         q = quotes.get(h.symbol)
         name = (q.name if q else None) or h.symbol
         pct = (h.current_value / total_value * 100) if total_value > 0 else 0.0
-        items.append(AllocationItem(
-            symbol=h.symbol,
-            name=name,
-            value=h.current_value,
-            pct_of_portfolio=round(pct, 2),
-            account_type=h.account_type,
-        ))
+        items.append(
+            AllocationItem(
+                symbol=h.symbol,
+                name=name,
+                value=h.current_value,
+                pct_of_portfolio=round(pct, 2),
+                account_type=h.account_type,
+            )
+        )
     return sorted(items, key=lambda x: x.pct_of_portfolio, reverse=True)
 
 
@@ -115,7 +119,5 @@ def format_portfolio_summary(summary: PortfolioSummary) -> str:
     for item in summary.allocation:
         lines.append(f"  {item.symbol}: {item.pct_of_portfolio:.1f}%")
 
-    lines.append(
-        f"\n_Updated {summary.as_of.strftime('%H:%M UTC')}_"
-    )
+    lines.append(f"\n_Updated {summary.as_of.strftime('%H:%M UTC')}_")
     return "\n".join(lines)

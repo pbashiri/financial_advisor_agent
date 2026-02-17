@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 TELEGRAM_MSG_LIMIT = 4096
 PACIFIC = ZoneInfo("America/Los_Angeles")
+MAX_CSV_SIZE_BYTES = 1_000_000  # 1 MB
 
 
 def _is_authorized(user_id: int, settings: Settings) -> bool:
@@ -190,8 +191,8 @@ async def portfolio_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         await _send_long_message(update, text, reply_markup=portfolio_keyboard())
     else:
         # Fallback: use briefing-style holdings from user_profile
-        agent: FinancialAdvisorAgent = context.bot_data["agent"]
         from .briefing import _format_holdings_section
+
         fallback_text = await _format_holdings_section(settings)
         if fallback_text:
             await _send_long_message(
@@ -251,6 +252,11 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     try:
         file = await context.bot.get_file(document.file_id)
         content_bytes = await file.download_as_bytearray()
+        if len(content_bytes) > MAX_CSV_SIZE_BYTES:
+            await update.message.reply_text(
+                "CSV file is too large. Please upload a file smaller than 1 MB."
+            )
+            return
         csv_text = content_bytes.decode("utf-8")
     except Exception:
         logger.exception("Failed to download CSV file")

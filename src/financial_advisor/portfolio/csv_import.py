@@ -71,9 +71,7 @@ def parse_holdings_csv(content: str) -> ImportResult:
         try:
             cost_basis = float(row.get("cost_basis", ""))
         except ValueError:
-            errors.append(
-                f"Row {row_num} ({symbol}): invalid cost_basis '{row.get('cost_basis')}'"
-            )
+            errors.append(f"Row {row_num} ({symbol}): invalid cost_basis '{row.get('cost_basis')}'")
             skipped += 1
             continue
 
@@ -81,7 +79,9 @@ def parse_holdings_csv(content: str) -> ImportResult:
         if account_type not in VALID_ACCOUNT_TYPES:
             logger.warning(
                 "Row %d (%s): unknown account_type '%s', defaulting to 'brokerage'",
-                row_num, symbol, account_type,
+                row_num,
+                symbol,
+                account_type,
             )
             account_type = "brokerage"
 

@@ -2,19 +2,25 @@
 
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from ..config import load_settings, PROJECT_ROOT
+from ..config import PROJECT_ROOT, Settings, load_settings
 from ..portfolio.storage import PortfolioStorage
 from .routes import analytics, market, portfolio
 
 
-def create_app() -> FastAPI:
-    settings = load_settings()
-
-    db_path = PROJECT_ROOT / "data" / "portfolio.db"
+def create_app(
+    settings: Optional[Settings] = None,
+    db_path: Optional[Path] = None,
+) -> FastAPI:
+    """Create FastAPI app. If settings/db_path are None, load from config (production)."""
+    if settings is None:
+        settings = load_settings()
+    if db_path is None:
+        db_path = PROJECT_ROOT / "data" / "portfolio.db"
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):

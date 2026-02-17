@@ -25,6 +25,7 @@ async def get_summary(request: Request):
 
     if not holdings:
         from datetime import datetime, timezone
+
         return PortfolioSummary(
             total_value=0.0,
             total_cost=0.0,
