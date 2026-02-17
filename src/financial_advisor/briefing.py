@@ -12,6 +12,47 @@ logger = logging.getLogger(__name__)
 NOTABLE_MOVE_THRESHOLD = 3.0  # percent
 
 
+async def _format_holdings_section(settings: Settings) -> str:
+    """Format holdings with live prices (used as fallback when API is offline)."""
+    holdings = settings.user_profile.get("holdings", [])
+    if not holdings:
+        return ""
+
+    holding_symbols = [h["symbol"] for h in holdings if "symbol" in h]
+    if not holding_symbols:
+        return ""
+
+    quotes = await get_multiple_quotes(holding_symbols)
+    quote_map = {q.symbol: q for q in quotes}
+    lines = []
+
+    for h in holdings:
+        sym = h.get("symbol")
+        if not sym or sym not in quote_map:
+            continue
+        q = quote_map[sym]
+        if q.price is None:
+            lines.append(f"  {sym}: Data unavailable")
+            continue
+
+        shares = h.get("shares", 0)
+        cost_basis = h.get("cost_basis")
+        line = format_quote(q)
+
+        if cost_basis and shares:
+            total_value = q.price * shares
+            total_cost = cost_basis * shares
+            gain = total_value - total_cost
+            gain_pct = ((q.price - cost_basis) / cost_basis) * 100
+            sign = "+" if gain >= 0 else ""
+            pl = f"{sign}${gain:,.2f} ({sign}{gain_pct:.1f}%)"
+            line += f"\n    {shares} shares | Cost: ${cost_basis:,.2f} | P/L: {pl}"
+
+        lines.append(line)
+
+    return "\n".join(lines)
+
+
 async def generate_briefing(settings: Settings, agent: FinancialAdvisorAgent) -> str:
     """Generate a full daily market briefing."""
     now = datetime.now(timezone.utc).strftime("%A, %B %d, %Y")
@@ -24,37 +65,10 @@ async def generate_briefing(settings: Settings, agent: FinancialAdvisorAgent) ->
         sections.append(format_quote(q))
 
     # Section 2: Your Holdings
-    holdings = settings.user_profile.get("holdings", [])
-    if holdings:
-        holding_symbols = [h["symbol"] for h in holdings if "symbol" in h]
-        if holding_symbols:
-            sections.append("\n*Your Holdings*")
-            quotes = await get_multiple_quotes(holding_symbols)
-            quote_map = {q.symbol: q for q in quotes}
-
-            for h in holdings:
-                sym = h.get("symbol")
-                if not sym or sym not in quote_map:
-                    continue
-                q = quote_map[sym]
-                if q.price is None:
-                    sections.append(f"  {sym}: Data unavailable")
-                    continue
-
-                shares = h.get("shares", 0)
-                cost_basis = h.get("cost_basis")
-                line = format_quote(q)
-
-                if cost_basis and shares:
-                    total_value = q.price * shares
-                    total_cost = cost_basis * shares
-                    gain = total_value - total_cost
-                    gain_pct = ((q.price - cost_basis) / cost_basis) * 100
-                    sign = "+" if gain >= 0 else ""
-                    pl = f"{sign}${gain:,.2f} ({sign}{gain_pct:.1f}%)"
-                    line += f"\n    {shares} shares | Cost: ${cost_basis:,.2f} | P/L: {pl}"
-
-                sections.append(line)
+    holdings_text = await _format_holdings_section(settings)
+    if holdings_text:
+        sections.append("\n*Your Holdings*")
+        sections.append(holdings_text)
 
     # Section 3: Watchlist
     watchlist = settings.user_profile.get("watchlist", [])
@@ -67,9 +81,11 @@ async def generate_briefing(settings: Settings, agent: FinancialAdvisorAgent) ->
     # Section 4: Notable Moves (>3%)
     all_quotes = []
     all_quotes.extend(indices)
-    if holdings:
-        holding_symbols = [h["symbol"] for h in holdings if "symbol" in h]
-        all_quotes.extend(await get_multiple_quotes(holding_symbols))
+    profile_holdings = settings.user_profile.get("holdings", [])
+    if profile_holdings:
+        holding_symbols = [h["symbol"] for h in profile_holdings if "symbol" in h]
+        if holding_symbols:
+            all_quotes.extend(await get_multiple_quotes(holding_symbols))
     if watchlist:
         all_quotes.extend(await get_multiple_quotes(watchlist))
 

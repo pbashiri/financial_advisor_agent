@@ -4,6 +4,7 @@ import logging
 import sys
 
 from .agent import FinancialAdvisorAgent
+from .api_client import ApiClient
 from .bot import create_bot
 from .config import load_settings
 from .memory import ConversationMemory
@@ -56,8 +57,19 @@ async def async_main() -> None:
     # Create agent
     agent = FinancialAdvisorAgent(settings, memory)
 
+    # Create API client (gracefully handles API being offline)
+    api_client = ApiClient(settings.api_base_url)
+    api_online = await api_client.health()
+    if api_online:
+        logger.info("API backend reachable at %s", settings.api_base_url)
+    else:
+        logger.warning(
+            "API backend not reachable at %s — portfolio commands will use fallback",
+            settings.api_base_url,
+        )
+
     # Create and run bot
-    app = create_bot(settings, memory, agent)
+    app = create_bot(settings, memory, agent, api_client)
 
     logger.info("Bot is starting (polling mode)...")
     # run_polling handles its own event loop
@@ -77,6 +89,7 @@ async def async_main() -> None:
         finally:
             await app.updater.stop()
             await app.stop()
+            await api_client.close()
             await memory.close()
 
 

@@ -1,0 +1,31 @@
+services:
+  api:
+    build: .
+    command: uv run uvicorn financial_advisor.api.app:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+    env_file: .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  bot:
+    build: .
+    command: uv run python -m financial_advisor.main
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+    env_file: .env
+    environment:
+      - API_BASE_URL=http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped

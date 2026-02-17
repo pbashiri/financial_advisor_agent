@@ -10,6 +10,7 @@ from telegram.constants import ChatAction, ParseMode
 from telegram.error import BadRequest
 from telegram.ext import (
     Application,
+    CallbackQueryHandler,
     CommandHandler,
     ContextTypes,
     MessageHandler,
@@ -17,8 +18,10 @@ from telegram.ext import (
 )
 
 from .agent import FinancialAdvisorAgent
+from .api_client import ApiClient
 from .briefing import generate_briefing
 from .config import Settings
+from .keyboards import main_menu_keyboard, portfolio_keyboard
 from .memory import ConversationMemory
 
 logger = logging.getLogger(__name__)
@@ -32,18 +35,20 @@ def _is_authorized(user_id: int, settings: Settings) -> bool:
 
 
 async def _send_long_message(
-    update: Update, text: str, parse_mode: str | None = ParseMode.MARKDOWN
+    update: Update, text: str, parse_mode: str | None = ParseMode.MARKDOWN, reply_markup=None
 ) -> None:
     """Send a message, splitting if it exceeds Telegram's 4096-char limit.
     Falls back to plain text if Markdown parsing fails."""
     chunks = _split_message(text, TELEGRAM_MSG_LIMIT)
-    for chunk in chunks:
+    for i, chunk in enumerate(chunks):
+        # Only attach reply_markup to the last chunk
+        markup = reply_markup if i == len(chunks) - 1 else None
         try:
-            await update.message.reply_text(chunk, parse_mode=parse_mode)
+            await update.message.reply_text(chunk, parse_mode=parse_mode, reply_markup=markup)
         except BadRequest as e:
             if "parse" in str(e).lower() or "can't" in str(e).lower():
                 logger.warning("Markdown parse error, retrying without parse_mode: %s", e)
-                await update.message.reply_text(chunk, parse_mode=None)
+                await update.message.reply_text(chunk, parse_mode=None, reply_markup=markup)
             else:
                 raise
 
@@ -84,12 +89,14 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         "- Investment recommendations\n\n"
         "Commands:\n"
         "/help — Show available commands\n"
+        "/portfolio — Live portfolio summary\n"
         "/briefing — Get today's market briefing\n"
         "/clear — Clear conversation history\n"
         "/status — Check bot status\n"
         "/profile — View your loaded profile\n\n"
         "Just send me any financial question to get started!",
         parse_mode=ParseMode.MARKDOWN,
+        reply_markup=main_menu_keyboard(),
     )
 
 
@@ -102,10 +109,13 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "*Available Commands*\n\n"
         "/start — Welcome message\n"
         "/help — This help message\n"
+        "/portfolio — Live portfolio summary with P/L\n"
         "/briefing — Today's market briefing (indices, holdings, watchlist)\n"
         "/clear — Clear conversation history\n"
         "/status — Bot status and model info\n"
         "/profile — View your loaded financial profile\n\n"
+        "*Import Holdings*\n"
+        "Send a CSV file with columns: symbol, shares, cost\\_basis, account\\_type, notes\n\n"
         "Or just type any financial question!",
         parse_mode=ParseMode.MARKDOWN,
     )
@@ -131,11 +141,16 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     has_profile = bool(settings.user_profile)
     briefing_time = f"{settings.briefing_hour:02d}:{settings.briefing_minute:02d} Pacific"
 
+    # Check if API is reachable
+    api_client: ApiClient = context.bot_data["api_client"]
+    api_status = "✅ Online" if await api_client.health() else "⚠️ Offline (bot uses fallback)"
+
     await update.message.reply_text(
         f"*Bot Status*\n\n"
         f"Model: `{settings.claude_model}`\n"
         f"Profile loaded: {'Yes' if has_profile else 'No'}\n"
         f"Daily briefing: {briefing_time}\n"
+        f"API backend: {api_status}\n"
         f"Your user ID: `{update.effective_user.id}`",
         parse_mode=ParseMode.MARKDOWN,
     )
@@ -160,6 +175,38 @@ async def profile_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     )
 
 
+async def portfolio_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Show live portfolio summary via the FastAPI backend."""
+    settings: Settings = context.bot_data["settings"]
+    if not _is_authorized(update.effective_user.id, settings):
+        return
+
+    await update.message.chat.send_action(ChatAction.TYPING)
+
+    api_client: ApiClient = context.bot_data["api_client"]
+    text = await api_client.get_portfolio_summary_text()
+
+    if text:
+        await _send_long_message(update, text, reply_markup=portfolio_keyboard())
+    else:
+        # Fallback: use briefing-style holdings from user_profile
+        agent: FinancialAdvisorAgent = context.bot_data["agent"]
+        from .briefing import _format_holdings_section
+        fallback_text = await _format_holdings_section(settings)
+        if fallback_text:
+            await _send_long_message(
+                update,
+                "*Portfolio (live prices)*\n\n" + fallback_text,
+                reply_markup=portfolio_keyboard(),
+            )
+        else:
+            await update.message.reply_text(
+                "Portfolio data unavailable. Make sure the API server is running "
+                "or check your holdings in /profile.",
+                reply_markup=main_menu_keyboard(),
+            )
+
+
 async def briefing_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     settings: Settings = context.bot_data["settings"]
     if not _is_authorized(update.effective_user.id, settings):
@@ -174,6 +221,134 @@ async def briefing_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     except Exception:
         logger.exception("Briefing generation failed")
         await update.message.reply_text("Sorry, I couldn't generate the briefing right now.")
+
+
+# --- CSV document upload handler ---
+
+
+async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle CSV file uploads for importing holdings."""
+    settings: Settings = context.bot_data["settings"]
+    if not _is_authorized(update.effective_user.id, settings):
+        return
+
+    document = update.message.document
+    if not document:
+        return
+
+    filename = document.file_name or ""
+    if not filename.lower().endswith(".csv"):
+        await update.message.reply_text(
+            "Please send a CSV file to import holdings.\n\n"
+            "Format: `symbol,shares,cost_basis,account_type,notes`",
+            parse_mode=ParseMode.MARKDOWN,
+        )
+        return
+
+    await update.message.chat.send_action(ChatAction.TYPING)
+
+    # Download file
+    try:
+        file = await context.bot.get_file(document.file_id)
+        content_bytes = await file.download_as_bytearray()
+        csv_text = content_bytes.decode("utf-8")
+    except Exception:
+        logger.exception("Failed to download CSV file")
+        await update.message.reply_text("Failed to download the file. Please try again.")
+        return
+
+    api_client: ApiClient = context.bot_data["api_client"]
+    result = await api_client.import_csv_text(csv_text)
+
+    if result is None:
+        await update.message.reply_text(
+            "The API server is not running. Start it with:\n"
+            "`uvicorn financial_advisor.api.app:app --port 8000`\n\n"
+            "Or use Docker Compose: `docker compose up`",
+            parse_mode=ParseMode.MARKDOWN,
+        )
+        return
+
+    imported = result.get("imported", 0)
+    skipped = result.get("skipped", 0)
+    errors = result.get("errors", [])
+
+    msg = f"✅ Imported *{imported}* holdings"
+    if skipped:
+        msg += f", skipped *{skipped}* rows"
+    if errors:
+        error_text = "\n".join(f"• {e}" for e in errors[:5])
+        msg += f"\n\n⚠️ Errors:\n{error_text}"
+        if len(errors) > 5:
+            msg += f"\n...and {len(errors) - 5} more"
+
+    await update.message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
+
+
+# --- Inline keyboard callback handler ---
+
+
+async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle inline keyboard button presses."""
+    query = update.callback_query
+    await query.answer()
+
+    settings: Settings = context.bot_data["settings"]
+    if not _is_authorized(query.from_user.id, settings):
+        return
+
+    data = query.data
+
+    if data == "portfolio":
+        api_client: ApiClient = context.bot_data["api_client"]
+        text = await api_client.get_portfolio_summary_text()
+        if text:
+            await query.message.reply_text(
+                text, parse_mode=ParseMode.MARKDOWN, reply_markup=portfolio_keyboard()
+            )
+        else:
+            await query.message.reply_text(
+                "Portfolio data unavailable. Make sure the API server is running.",
+                reply_markup=main_menu_keyboard(),
+            )
+
+    elif data == "briefing":
+        agent: FinancialAdvisorAgent = context.bot_data["agent"]
+        try:
+            text = await generate_briefing(settings, agent)
+            chunks = _split_message(text, TELEGRAM_MSG_LIMIT)
+            for chunk in chunks:
+                try:
+                    await query.message.reply_text(chunk, parse_mode=ParseMode.MARKDOWN)
+                except BadRequest:
+                    await query.message.reply_text(chunk)
+        except Exception:
+            logger.exception("Briefing generation failed from callback")
+            await query.message.reply_text("Briefing generation failed.")
+
+    elif data == "analysis":
+        api_client: ApiClient = context.bot_data["api_client"]
+        text = await api_client.get_portfolio_summary_text()
+        if text:
+            await query.message.reply_text(
+                text, parse_mode=ParseMode.MARKDOWN, reply_markup=portfolio_keyboard()
+            )
+        else:
+            await query.message.reply_text(
+                "Analysis unavailable. Make sure the API server is running.",
+                reply_markup=main_menu_keyboard(),
+            )
+
+    elif data in ("help", "menu"):
+        await query.message.reply_text(
+            "*Available Commands*\n\n"
+            "/portfolio — Live portfolio summary\n"
+            "/briefing — Today's market briefing\n"
+            "/help — Full command list\n\n"
+            "Or type any financial question!",
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=main_menu_keyboard(),
+        )
 
 
 # --- Catch-all text handler ---
@@ -237,7 +412,10 @@ async def scheduled_briefing(context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 def create_bot(
-    settings: Settings, memory: ConversationMemory, agent: FinancialAdvisorAgent
+    settings: Settings,
+    memory: ConversationMemory,
+    agent: FinancialAdvisorAgent,
+    api_client: ApiClient,
 ) -> Application:
     """Create and configure the Telegram bot application."""
     app = Application.builder().token(settings.telegram_bot_token).build()
@@ -246,6 +424,7 @@ def create_bot(
     app.bot_data["settings"] = settings
     app.bot_data["memory"] = memory
     app.bot_data["agent"] = agent
+    app.bot_data["api_client"] = api_client
 
     # Register command handlers
     app.add_handler(CommandHandler("start", start_command))
@@ -254,6 +433,13 @@ def create_bot(
     app.add_handler(CommandHandler("status", status_command))
     app.add_handler(CommandHandler("briefing", briefing_command))
     app.add_handler(CommandHandler("profile", profile_command))
+    app.add_handler(CommandHandler("portfolio", portfolio_command))
+
+    # Inline keyboard callbacks
+    app.add_handler(CallbackQueryHandler(handle_callback_query))
+
+    # Document uploads (CSV import)
+    app.add_handler(MessageHandler(filters.Document.FileExtension("csv"), handle_document))
 
     # Catch-all for text messages
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
