@@ -14,7 +14,10 @@
       "Bash(curl:*)",
       "Bash(sh)",
       "Bash(export PATH=\"$HOME/.local/bin:$PATH\")",
-      "Bash(git remote set-url:*)"
+      "Bash(git remote set-url:*)",
+      "Bash(/Users/Pedram/.local/bin/uv pip list:*)",
+      "Bash(/Users/Pedram/.local/bin/uv run python:*)",
+      "Bash(git add:*)"
     ]
   }
 }

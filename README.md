@@ -21,7 +21,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ### 2. Clone and install dependencies
 
 ```bash
-cd financial_advisor_agent_2
+cd financial_advisor_agent
 uv sync --all-extras
 ```
 
