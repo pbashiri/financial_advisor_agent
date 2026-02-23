@@ -1,13 +1,20 @@
 # V2 Test Strategy: Hands-On Feature Assessment
 
-## ✅ V2.4 Complete - All Features Wired Up
+## ✅ V2.4 Complete - All Features Wired Up & Bot Ready
 
-All V2 features are now fully integrated with the Telegram bot and ready for end-to-end testing.
+All V2 features are fully integrated with the Telegram bot. You can now test everything directly via Telegram commands!
 
 | Layer | Features | How to test |
 |---|---|---|
-| **V0-V1** (core) | Chat, briefing, portfolio, CSV import, inline keyboards | Telegram + API calls |
-| **V2** (NEW) | Alerts, News/RAG, Recommendations, Scheduled jobs | Telegram + optional V2 setup |
+| **V0-V1** (core) | Chat, briefing, portfolio, CSV import, inline keyboards | Telegram bot + API backend |
+| **V2** (NEW) | `/recommend`, `/alerts`, `/news` commands + scheduled jobs | Telegram bot (requires V2 setup*) |
+
+**V2 Setup Required:**
+- FINNHUB_API_KEY in .env (free tier at finnhub.io)
+- Ollama running with `nomic-embed-text` model
+- ChromaDB (auto-configured on first run)
+
+*Note: Bot will show helpful error messages if V2 dependencies aren't configured.*
 
 ---
 

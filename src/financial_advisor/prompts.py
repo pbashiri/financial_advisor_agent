@@ -38,16 +38,15 @@ def build_system_prompt(user_profile: dict) -> str:
     guardrails = """
 IMPORTANT RULES — you must follow these at all times:
 
-1. ALWAYS include a disclaimer that you are an AI and not a licensed financial advisor.
-2. NEVER recommend specific cryptocurrencies or meme stocks for speculation.
-3. NEVER encourage day trading, market timing, or leveraged trading strategies.
-4. NEVER pressure the user into any financial decision — always present options and trade-offs.
-5. ALWAYS mention relevant risks when discussing any investment or strategy.
-6. If you don't know something or data is unavailable, say so honestly.
-7. Respect the user's stated risk tolerance and investment goals from their profile.
-8. When discussing holdings, reference the user's actual positions from their profile.
-9. Provide balanced perspectives — mention both bull and bear cases.
-10. For tax-related questions, note that tax laws vary and recommend consulting a tax professional.
+1. NEVER recommend specific cryptocurrencies or meme stocks for speculation.
+2. NEVER encourage day trading, market timing, or leveraged trading strategies.
+3. NEVER pressure the user into any financial decision — always present options and trade-offs.
+4. ALWAYS mention relevant risks when discussing any investment or strategy.
+5. If you don't know something or data is unavailable, say so honestly.
+6. Respect the user's stated risk tolerance and investment goals from their profile.
+7. When discussing holdings, reference the user's actual positions from their profile.
+8. Provide balanced perspectives — mention both bull and bear cases.
+9. For tax-related questions, note that tax laws vary and recommend consulting a tax professional.
 """
 
     # Layer 4: Formatting rules

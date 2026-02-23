@@ -86,17 +86,22 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     has_alerts = context.bot_data.get("alert_engine") is not None
     has_news = context.bot_data.get("news_pipeline") is not None
 
-    v2_features = []
-    if has_recommendations:
-        v2_features.append("- AI-powered stock recommendations")
-    if has_alerts:
-        v2_features.append("- Price and portfolio alerts")
-    if has_news:
-        v2_features.append("- RAG-powered news search")
+    # Build complete command list
+    commands = [
+        "/help — Show all commands",
+        "/portfolio — Live portfolio summary",
+        "/briefing — Get today's market briefing",
+        "/clear — Clear conversation history",
+        "/status — Check bot status",
+        "/profile — View your loaded profile",
+    ]
 
-    v2_text = ""
-    if v2_features:
-        v2_text = "\n\n*V2 Features (NEW):*\n" + "\n".join(v2_features)
+    if has_recommendations:
+        commands.append("/recommend SYMBOL — AI stock recommendations")
+    if has_alerts:
+        commands.append("/alerts — Manage price and portfolio alerts")
+    if has_news:
+        commands.append("/news QUERY — Search financial news")
 
     await update.message.reply_text(
         "Welcome to your *Personal Financial Advisor Agent*! \n\n"
@@ -104,15 +109,11 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         "- Investment analysis and portfolio questions\n"
         "- Market insights and stock research\n"
         "- Daily market briefings\n"
-        "- Portfolio tracking and analytics"
-        f"{v2_text}\n\n"
-        "*Core Commands:*\n"
-        "/help — Show all commands\n"
-        "/portfolio — Live portfolio summary\n"
-        "/briefing — Get today's market briefing\n"
-        "/clear — Clear conversation history\n"
-        "/status — Check bot status\n"
-        "/profile — View your loaded profile\n\n"
+        "- Portfolio tracking and analytics\n"
+        "- AI-powered recommendations and alerts\n"
+        "- RAG-powered news search\n\n"
+        "*Available Commands:*\n"
+        + "\n".join(commands) + "\n\n"
         "Just send me any financial question to get started!",
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=main_menu_keyboard(),
@@ -129,29 +130,27 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     has_alerts = context.bot_data.get("alert_engine") is not None
     has_news = context.bot_data.get("news_pipeline") is not None
 
-    v2_commands = []
-    if has_recommendations:
-        v2_commands.append("/recommend SYMBOL — AI-powered stock recommendation")
-    if has_alerts:
-        v2_commands.append("/alerts — Manage price and portfolio alerts")
-    if has_news:
-        v2_commands.append("/news QUERY — Search news with RAG")
+    # Build complete command list
+    commands = [
+        "/start — Welcome message",
+        "/help — This help message",
+        "/portfolio — Live portfolio summary with P/L",
+        "/briefing — Today's market briefing (indices, holdings, watchlist)",
+        "/clear — Clear conversation history",
+        "/status — Bot status and model info",
+        "/profile — View your loaded financial profile",
+    ]
 
-    v2_text = ""
-    if v2_commands:
-        v2_text = "\n\n*V2 Commands:*\n" + "\n".join(v2_commands)
+    if has_recommendations:
+        commands.append("/recommend SYMBOL — AI-powered stock recommendation")
+    if has_alerts:
+        commands.append("/alerts — Manage price and portfolio alerts")
+    if has_news:
+        commands.append("/news QUERY — Search news with RAG")
 
     await update.message.reply_text(
         "*Available Commands*\n\n"
-        "*Core:*\n"
-        "/start — Welcome message\n"
-        "/help — This help message\n"
-        "/portfolio — Live portfolio summary with P/L\n"
-        "/briefing — Today's market briefing (indices, holdings, watchlist)\n"
-        "/clear — Clear conversation history\n"
-        "/status — Bot status and model info\n"
-        "/profile — View your loaded financial profile"
-        f"{v2_text}\n\n"
+        + "\n".join(commands) + "\n\n"
         "*Import Holdings*\n"
         "Send a CSV file with columns: symbol, shares, cost\\_basis, account\\_type, notes\n\n"
         "Or just type any financial question!",
