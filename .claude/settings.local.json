@@ -25,7 +25,8 @@
       "Bash(git -C:*)",
       "Bash(gh pr create:*)",
       "mcp__gdrive__search",
-      "WebFetch(domain:docs.google.com)"
+      "WebFetch(domain:docs.google.com)",
+      "Bash(git log:*)"
     ]
   }
 }
