@@ -46,6 +46,18 @@ class Settings:
     # API backend URL (for bot → FastAPI communication)
     api_base_url: str = "http://localhost:8000"
 
+    # V2: News & RAG
+    finnhub_api_key: str = ""
+    ollama_base_url: str = "http://localhost:11434"
+    chromadb_path: Path = PROJECT_ROOT / "data" / "chromadb"
+    news_fetch_interval_hours: int = 4
+
+    # V2: Alerts
+    alert_check_interval_minutes: int = 30
+
+    # V2: Analysis model (Sonnet for recommendations, Haiku for chat)
+    claude_model_analysis: str = "claude-sonnet-4-5-20250929"
+
     # Paths
     db_path: Path = PROJECT_ROOT / "data" / "conversations.db"
 
@@ -100,6 +112,19 @@ def load_settings(env_path: Path | None = None, profile_path: Path | None = None
 
     api_base_url = os.getenv("API_BASE_URL", "http://localhost:8000")
 
+    # V2 settings
+    finnhub_api_key = os.getenv("FINNHUB_API_KEY", "")
+    ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    chromadb_path = PROJECT_ROOT / "data" / "chromadb"
+    chromadb_path_raw = os.getenv("CHROMADB_PATH")
+    if chromadb_path_raw:
+        chromadb_path = Path(chromadb_path_raw)
+        if not chromadb_path.is_absolute():
+            chromadb_path = PROJECT_ROOT / chromadb_path
+    news_fetch_interval_hours = int(os.getenv("NEWS_FETCH_INTERVAL_HOURS", "4"))
+    alert_check_interval_minutes = int(os.getenv("ALERT_CHECK_INTERVAL_MINUTES", "30"))
+    claude_model_analysis = os.getenv("CLAUDE_MODEL_ANALYSIS", "claude-sonnet-4-5-20250929")
+
     return Settings(
         telegram_bot_token=telegram_token,
         anthropic_api_key=anthropic_key,
@@ -111,5 +136,11 @@ def load_settings(env_path: Path | None = None, profile_path: Path | None = None
         user_profile=user_profile,
         major_indices=major_indices,
         api_base_url=api_base_url,
+        finnhub_api_key=finnhub_api_key,
+        ollama_base_url=ollama_base_url,
+        chromadb_path=chromadb_path,
+        news_fetch_interval_hours=news_fetch_interval_hours,
+        alert_check_interval_minutes=alert_check_interval_minutes,
+        claude_model_analysis=claude_model_analysis,
         db_path=db_path,
     )

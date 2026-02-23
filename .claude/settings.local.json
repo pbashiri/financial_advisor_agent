@@ -23,7 +23,9 @@
       "Bash(git -C /Users/Pedram/Workspace/financial_advisor_agent/financial_advisor_agent status --short)",
       "Bash(git -C /Users/Pedram/Workspace/financial_advisor_agent/financial_advisor_agent add pyproject.toml uv.lock src/financial_advisor/bot.py src/financial_advisor/briefing.py src/financial_advisor/config.py src/financial_advisor/main.py src/financial_advisor/api/ src/financial_advisor/api_client.py src/financial_advisor/keyboards.py src/financial_advisor/portfolio/ tests/test_analytics.py tests/test_portfolio.py Dockerfile docker-compose.yml)",
       "Bash(git -C:*)",
-      "Bash(gh pr create:*)"
+      "Bash(gh pr create:*)",
+      "mcp__gdrive__search",
+      "WebFetch(domain:docs.google.com)"
     ]
   }
 }
