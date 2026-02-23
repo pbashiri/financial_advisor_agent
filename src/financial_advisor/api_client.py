@@ -101,3 +101,17 @@ class ApiClient:
         except Exception as e:
             logger.error("API error fetching quote for %s: %s", symbol, e)
             return None
+
+    async def get_portfolio_holdings(self) -> list[dict[str, Any]] | None:
+        """Fetch portfolio holdings list, or None if API unavailable."""
+        try:
+            client = await self._get_client()
+            r = await client.get("/portfolio")
+            r.raise_for_status()
+            return r.json()
+        except (httpx.ConnectError, httpx.TimeoutException):
+            logger.warning("API server not reachable")
+            return None
+        except Exception as e:
+            logger.error("API error fetching portfolio holdings: %s", e)
+            return None
